@@ -24,7 +24,7 @@ class AIService {
   }
 
   async checkWithAI(userCode, exercise) {
-    const prompt = `${exercise.aiPrompt}\n\nКод ученика:\n\`\`\`javascript\n${userCode}\n\`\`\`\n\nОтветь ТОЛЬКО в формате JSON:\n{"correct": true/false, "message": "сообщение на русском", "hint": "подсказка если есть ошибки"}`;
+    const prompt = `${exercise.aiPrompt}\n\nКод ученика:\n\`\`\`python\n${userCode}\n\`\`\`\n\nОтветь ТОЛЬКО в формате JSON:\n{"correct": true/false, "message": "сообщение на русском", "hint": "подсказка если есть ошибки"}`;
 
     const response = await fetch(this.config.apiUrl, {
       method: "POST",
@@ -32,7 +32,7 @@ class AIService {
         Authorization: `Bearer ${this.config.apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": window.location.origin,
-        "X-Title": "Programming Tutor",
+        "X-Title": "Python Tutor",
       },
       body: JSON.stringify({
         model: this.config.model,
@@ -40,7 +40,7 @@ class AIService {
           {
             role: "system",
             content:
-              "Ты — дружелюбный тьютор по программированию на JavaScript. Отвечай на русском языке. Всегда отвечай строго в формате JSON без markdown.",
+              "Ты — дружелюбный тьютор по программированию на Python. Отвечай на русском языке. Всегда отвечай строго в формате JSON без markdown.",
           },
           { role: "user", content: prompt },
         ],
@@ -82,7 +82,7 @@ class AIService {
       if (!passed) allPassed = false;
     }
 
-    const failedTests = results.filter((r) => !r.passed);
+    const failed = results.filter((r) => !r.passed);
 
     if (allPassed) {
       return {
@@ -92,15 +92,16 @@ class AIService {
       };
     }
 
-    const messages = failedTests.map((t) => `- ${t.message}`).join("\n");
-    const hint =
-      exercise.hints && exercise.hints.length > 0
-        ? exercise.hints[Math.floor(Math.random() * exercise.hints.length)]
-        : null;
+    const messages = failed.map((t) => "  " + t.message).join("\n");
+    const hints = exercise.hints || [];
+    const idx = failed.length > 0
+      ? failed.length - 1
+      : 0;
+    const hint = hints[Math.min(idx, hints.length - 1)] || null;
 
     return {
       correct: false,
-      message: `Найдены проблемы:\n${messages}`,
+      message: "Найдены проблемы:\n" + messages,
       hint: hint,
     };
   }
@@ -117,7 +118,7 @@ class AIService {
   }
 
   async explainWithAI(userCode, exercise, errorMsg) {
-    const prompt = `Ученик решает задачу: "${exercise.description}"\nЕго код:\n\`\`\`javascript\n${userCode}\n\`\`\`\nОшибка: ${errorMsg}\n\nОбъясни подробно на русском языке, в чём ошибка и как её исправить. Дай пример правильного кода если возможно.`;
+    const prompt = `Ученик решает задачу на Python: "${exercise.description}"\nЕго код:\n\`\`\`python\n${userCode}\n\`\`\`\nОшибка: ${errorMsg}\n\nОбъясни подробно на русском языке, в чём ошибка и как её исправить.`;
 
     const response = await fetch(this.config.apiUrl, {
       method: "POST",
@@ -125,7 +126,7 @@ class AIService {
         Authorization: `Bearer ${this.config.apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": window.location.origin,
-        "X-Title": "Programming Tutor",
+        "X-Title": "Python Tutor",
       },
       body: JSON.stringify({
         model: this.config.model,
@@ -133,7 +134,7 @@ class AIService {
           {
             role: "system",
             content:
-              "Ты — дружелюбный тьютор по программированию. Объясняй ошибки просто и понятно на русском языке. Приводи примеры кода.",
+              "Ты — дружелюбный тьютор по Python. Объясняй ошибки просто и понятно на русском языке.",
           },
           { role: "user", content: prompt },
         ],
@@ -151,14 +152,14 @@ class AIService {
   }
 
   explainLocally(exercise, errorMsg) {
-    let explanation = `Ошибка: ${errorMsg}\n\n`;
-    explanation += `Подсказки к задаче "${exercise.title}":\n`;
-    if (exercise.hints) {
+    let text = errorMsg + "\n\n";
+    if (exercise.hints && exercise.hints.length > 0) {
+      text += "Подсказки:\n";
       exercise.hints.forEach((h, i) => {
-        explanation += `${i + 1}. ${h}\n`;
+        text += `${i + 1}. ${h}\n`;
       });
     }
-    return explanation;
+    return text;
   }
 }
 

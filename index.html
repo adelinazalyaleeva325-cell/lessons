@@ -3,43 +3,109 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Тьютор по программированию</title>
+  <title>Бабуля-Тьютор | Python</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app">
     <header class="header">
-      <h1>&#128187; Тьютор по JavaScript</h1>
-      <p class="subtitle">Решайте задачи, получайте проверку и объяснения</p>
+      <div class="header-logo">
+        <span class="logo-icon">&#128013;</span>
+        <div>
+          <h1>Бабуля-Тьютор</h1>
+          <p class="subtitle">Изучаем Python вместе!</p>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+        <span class="progress-text" id="progressText">0 / 6</span>
+      </div>
     </header>
 
     <div class="main-layout">
-      <aside class="sidebar">
-        <h2>Задачи</h2>
-        <div id="exerciseList" class="exercise-list"></div>
+      <!-- Левая панель: бабушка + кнопки -->
+      <aside class="sidebar-left">
+        <div class="grandma-area">
+          <!-- Бабушка — CSS персонаж -->
+          <div class="grandma" id="grandma" title="Нажми на меня!">
+            <!-- Подсказка-облачко -->
+            <div class="speech-bubble" id="speechBubble">
+              <span>Нажми на меня — дам подсказку!</span>
+            </div>
+            <!-- Голова -->
+            <div class="grandma-head">
+              <div class="hair-bun"></div>
+              <div class="hair-left"></div>
+              <div class="hair-right"></div>
+              <div class="face">
+                <div class="glasses">
+                  <div class="lens left"></div>
+                  <div class="lens right"></div>
+                  <div class="bridge"></div>
+                </div>
+                <div class="eye left"></div>
+                <div class="eye right"></div>
+                <div class="nose"></div>
+                <div class="mouth"></div>
+                <div class="cheek left"></div>
+                <div class="cheek right"></div>
+              </div>
+            </div>
+            <!-- Тело -->
+            <div class="grandma-body">
+              <div class="dress"></div>
+              <div class="collar"></div>
+              <div class="brooch"></div>
+              <div class="arm left"></div>
+              <div class="arm right"></div>
+              <div class="hand left">
+                <div class="pointer"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Кнопки рядом с бабушкой -->
+          <div class="grandma-buttons">
+            <button id="hintBtn" class="btn btn-hint">
+              <span class="btn-icon">&#128161;</span> Подсказка
+            </button>
+            <button id="checkBtn" class="btn btn-check">
+              <span class="btn-icon">&#10004;</span> Проверить
+            </button>
+            <button id="clearBtn" class="btn btn-clear">
+              <span class="btn-icon">&#8634;</span> Сбросить
+            </button>
+          </div>
+        </div>
+
+        <!-- Список задач -->
+        <div class="sidebar-tasks">
+          <h3>Задания</h3>
+          <div id="exerciseList" class="exercise-list"></div>
+        </div>
       </aside>
 
+      <!-- Правая панель: задание + редактор -->
       <main class="content">
         <div class="exercise-panel">
           <div class="exercise-header">
-            <h2 id="exerciseTitle"></h2>
-            <span id="exerciseDifficulty" class="exercise-difficulty"></span>
+            <span class="exercise-badge" id="exerciseBadge">1</span>
+            <div>
+              <h2 id="exerciseTitle"></h2>
+              <span id="exerciseDifficulty" class="exercise-difficulty"></span>
+            </div>
           </div>
           <p id="exerciseDescription" class="exercise-description"></p>
         </div>
 
         <div class="editor-panel">
           <div class="editor-header">
-            <span>Редактор кода</span>
+            <div class="editor-tabs">
+              <span class="tab active">main.py</span>
+            </div>
             <span class="editor-hint">Ctrl+Enter — проверить</span>
           </div>
-          <textarea id="codeInput" class="code-input" spellcheck="false" placeholder="Введите ваш код здесь..."></textarea>
-        </div>
-
-        <div class="actions">
-          <button id="checkBtn" class="btn btn-primary">&#10003; Проверить</button>
-          <button id="hintBtn" class="btn btn-secondary">&#128161; Подсказка</button>
-          <button id="clearBtn" class="btn btn-outline">&#8634; Сбросить</button>
+          <textarea id="codeInput" class="code-input" spellcheck="false" placeholder="# Напишите ваш Python код здесь..."></textarea>
         </div>
 
         <div id="result" class="result" style="display:none;"></div>

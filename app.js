@@ -4,6 +4,7 @@ class ProgrammingTutor {
     this.currentExerciseIndex = 0;
     this.solvedExercises = new Set();
     this.isChecking = false;
+    this.hintIndex = {};
     this.init();
   }
 
@@ -28,20 +29,23 @@ class ProgrammingTutor {
       this.hideResult();
     });
 
+    document.getElementById("grandma").addEventListener("click", () => {
+      this.grandmaHint();
+    });
+
     document.getElementById("codeInput").addEventListener("keydown", (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
         this.checkCode();
       }
       if (e.key === "Tab") {
         e.preventDefault();
-        const textarea = e.target;
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        textarea.value =
-          textarea.value.substring(0, start) +
-          "  " +
-          textarea.value.substring(end);
-        textarea.selectionStart = textarea.selectionEnd = start + 2;
+        const ta = e.target;
+        const start = ta.selectionStart;
+        const end = ta.selectionEnd;
+        ta.value =
+          ta.value.substring(0, start) + "    " + ta.value.substring(end);
+        ta.selectionStart = ta.selectionEnd = start + 4;
       }
     });
   }
@@ -60,22 +64,29 @@ class ProgrammingTutor {
         <span class="exercise-number">${exercise.id}</span>
         <div class="exercise-info">
           <div class="exercise-title">${exercise.title}</div>
-          <div class="exercise-difficulty ${exercise.difficulty}">${this.difficultyLabel(exercise.difficulty)}</div>
+          <div class="exercise-difficulty ${exercise.difficulty}">${this.diffLabel(exercise.difficulty)}</div>
         </div>
         ${solved ? '<span class="exercise-solved">&#10003;</span>' : ""}
       `;
 
-      item.addEventListener("click", () => {
-        this.loadExercise(index);
-      });
-
+      item.addEventListener("click", () => this.loadExercise(index));
       list.appendChild(item);
     });
+
+    this.updateProgress();
   }
 
-  difficultyLabel(d) {
-    const labels = { beginner: "Начальный", intermediate: "Средний", advanced: "Продвинутый" };
-    return labels[d] || d;
+  diffLabel(d) {
+    const m = { beginner: "Начальный", intermediate: "Средний", advanced: "Сложный" };
+    return m[d] || d;
+  }
+
+  updateProgress() {
+    const total = EXERCISES.length;
+    const done = this.solvedExercises.size;
+    const pct = (done / total) * 100;
+    document.getElementById("progressFill").style.width = pct + "%";
+    document.getElementById("progressText").textContent = `${done} / ${total}`;
   }
 
   loadExercise(index) {
@@ -84,12 +95,14 @@ class ProgrammingTutor {
 
     document.getElementById("exerciseTitle").textContent =
       this.currentExercise.title;
+    document.getElementById("exerciseBadge").textContent =
+      this.currentExercise.id;
     document.getElementById("exerciseDescription").textContent =
       this.currentExercise.description;
-    document.getElementById("exerciseDifficulty").textContent =
-      this.difficultyLabel(this.currentExercise.difficulty);
-    document.getElementById("exerciseDifficulty").className =
-      "exercise-difficulty " + this.currentExercise.difficulty;
+
+    const diffEl = document.getElementById("exerciseDifficulty");
+    diffEl.textContent = this.diffLabel(this.currentExercise.difficulty);
+    diffEl.className = "exercise-difficulty " + this.currentExercise.difficulty;
 
     document.getElementById("codeInput").value =
       this.currentExercise.starterCode || "";
@@ -111,9 +124,10 @@ class ProgrammingTutor {
 
     this.isChecking = true;
     const btn = document.getElementById("checkBtn");
-    const originalText = btn.textContent;
-    btn.textContent = "Проверяю...";
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span class="btn-icon">&#8987;</span> Проверяю...';
     btn.disabled = true;
+    this.setGrandmaState("checking");
 
     try {
       const result = await aiService.checkCode(code, this.currentExercise);
@@ -122,57 +136,81 @@ class ProgrammingTutor {
         this.solvedExercises.add(this.currentExercise.id);
         this.renderExerciseList();
         this.showResult("success", result.message);
+        this.setGrandmaState("happy");
 
-        const nextIndex = this.currentExerciseIndex + 1;
-        if (nextIndex < EXERCISES.length) {
+        if (this.currentExerciseIndex + 1 < EXERCISES.length) {
           setTimeout(() => {
-            if (confirm("Задача решена! Перейти к следующей?")) {
-              this.loadExercise(nextIndex);
+            if (confirm("Молодец! Перейти к следующему заданию?")) {
+              this.loadExercise(this.currentExerciseIndex + 1);
             }
-          }, 500);
+          }, 600);
         } else {
           this.showResult(
             "success",
-            result.message + "\n\nВы решили все задачи! Поздравляем!"
+            result.message + "\n\nТы решил все задачи! Бабуля тобой гордится!"
           );
         }
       } else {
-        let message = result.message;
-        if (result.hint) {
-          message += "\n\nПодсказка: " + result.hint;
-        }
-        this.showResult("error", message);
+        let msg = result.message;
+        if (result.hint) msg += "\n\nПодсказка: " + result.hint;
+        this.showResult("error", msg);
+        this.setGrandmaState("worried");
       }
-    } catch (error) {
-      this.showResult(
-        "error",
-        "Произошла ошибка при проверке. Попробуйте ещё раз.\n" + error.message
-      );
+    } catch (err) {
+      this.showResult("error", "Ошибка проверки: " + err.message);
+      this.setGrandmaState("worried");
     } finally {
       this.isChecking = false;
-      btn.textContent = originalText;
+      btn.innerHTML = orig;
       btn.disabled = false;
+      setTimeout(() => this.setGrandmaState("idle"), 1500);
     }
   }
 
   showHint() {
-    if (!this.currentExercise.hints || this.currentExercise.hints.length === 0) {
-      this.showResult("info", "Подсказки пока недоступны для этой задачи.");
+    if (
+      !this.currentExercise.hints ||
+      this.currentExercise.hints.length === 0
+    ) {
+      this.showResult("info", "Подсказки пока недоступны.");
       return;
     }
 
+    const id = this.currentExercise.id;
+    if (!this.hintIndex[id]) this.hintIndex[id] = 0;
+
     const hints = this.currentExercise.hints;
-    const randomHint = hints[Math.floor(Math.random() * hints.length)];
-    this.showResult("info", "Подсказка: " + randomHint);
+    const hint = hints[this.hintIndex[id] % hints.length];
+    this.hintIndex[id]++;
+
+    this.showResult("info", "Подсказка: " + hint);
+    this.grandmaBounce();
+  }
+
+  grandmaHint() {
+    this.showHint();
+  }
+
+  grandmaBounce() {
+    const g = document.getElementById("grandma");
+    g.classList.remove("bounce");
+    void g.offsetWidth;
+    g.classList.add("bounce");
+    setTimeout(() => g.classList.remove("bounce"), 500);
+  }
+
+  setGrandmaState(state) {
+    const g = document.getElementById("grandma");
+    g.classList.remove("happy", "worried", "checking");
+    if (state !== "idle") g.classList.add(state);
   }
 
   showResult(type, message) {
-    const resultEl = document.getElementById("result");
-    resultEl.className = `result ${type}`;
-    resultEl.textContent = message;
-    resultEl.style.display = "block";
-
-    resultEl.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    const el = document.getElementById("result");
+    el.className = "result " + type;
+    el.textContent = message;
+    el.style.display = "block";
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
 
   hideResult() {

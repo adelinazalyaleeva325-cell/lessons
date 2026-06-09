@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Тьютор по программированию</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>&#128187; Тьютор по JavaScript</h1>
+      <p class="subtitle">Решайте задачи, получайте проверку и объяснения</p>
+    </header>
+
+    <div class="main-layout">
+      <aside class="sidebar">
+        <h2>Задачи</h2>
+        <div id="exerciseList" class="exercise-list"></div>
+      </aside>
+
+      <main class="content">
+        <div class="exercise-panel">
+          <div class="exercise-header">
+            <h2 id="exerciseTitle"></h2>
+            <span id="exerciseDifficulty" class="exercise-difficulty"></span>
+          </div>
+          <p id="exerciseDescription" class="exercise-description"></p>
+        </div>
+
+        <div class="editor-panel">
+          <div class="editor-header">
+            <span>Редактор кода</span>
+            <span class="editor-hint">Ctrl+Enter — проверить</span>
+          </div>
+          <textarea id="codeInput" class="code-input" spellcheck="false" placeholder="Введите ваш код здесь..."></textarea>
+        </div>
+
+        <div class="actions">
+          <button id="checkBtn" class="btn btn-primary">&#10003; Проверить</button>
+          <button id="hintBtn" class="btn btn-secondary">&#128161; Подсказка</button>
+          <button id="clearBtn" class="btn btn-outline">&#8634; Сбросить</button>
+        </div>
+
+        <div id="result" class="result" style="display:none;"></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/exercises.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
